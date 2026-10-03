@@ -37,6 +37,20 @@ func main() {
 	}
 }
 
+func validateBookmark(name, link string) error {
+	if name == "" {
+		return errNotName
+	}
+	if link == "" {
+		return errNotLink
+	}
+	if _, err := url.ParseRequestURI(link); err != nil {
+		return errInvalidLink
+	}
+
+	return nil
+}
+
 func home(w http.ResponseWriter, r *http.Request) {
 	if _, err := fmt.Fprint(w, "Hello, my name is Misha"); err != nil {
 		log.Println("Error:", err)
@@ -71,24 +85,10 @@ func bookmarks(w http.ResponseWriter, r *http.Request) {
 		name := form.Get("name")
 		link := form.Get("link")
 
-		if name == "" {
+		if err := validateBookmark(name, link); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			if _, err := fmt.Fprintln(w, "Error:", errNotName); err != nil {
-				log.Println("Error:", err)
-			}
-			return
-		}
-		if link == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			if _, err := fmt.Fprintln(w, "Error:", errNotLink); err != nil {
-				log.Println("Error:", err)
-			}
-			return
-		}
-		if _, err := url.ParseRequestURI(link); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			if _, err := fmt.Fprintln(w, "Error:", errInvalidLink); err != nil {
-				log.Println("Error:", err)
+			if _, errOutput := fmt.Fprintln(w, "Error:", err); errOutput != nil {
+				log.Println("Error:", errOutput)
 			}
 			return
 		}
@@ -120,25 +120,10 @@ func addBookmark(w http.ResponseWriter, r *http.Request) {
 	name := query.Get("name")
 	link := query.Get("link")
 
-	if len(name) == 0 {
+	if err := validateBookmark(name, link); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		if _, err := fmt.Fprintln(w, errNotName); err != nil {
-			log.Println("Error: ", err)
-		}
-		return
-	}
-
-	if len(link) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		if _, err := fmt.Fprintln(w, errNotLink); err != nil {
-			log.Println("Error: ", err)
-		}
-		return
-	}
-	if _, err := url.ParseRequestURI(link); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		if _, err := fmt.Fprintln(w, errInvalidLink); err != nil {
-			log.Println("Error: ", err)
+		if _, errOutput := fmt.Fprintln(w, "Error:", err); errOutput != nil {
+			log.Println("Error:", errOutput)
 		}
 		return
 	}
